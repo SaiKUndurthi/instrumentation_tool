@@ -1,24 +1,37 @@
 #!/bin/bash
 
-TEMP_DIR=$ASPECTJ_HOME/target_classes/
+function error_exit
+{
+	echo "$1" 1>&2
+	exit 1
+}
+
+export INSTR_HOME=$ANDROID_HOME/instrumentation_tool
+
+TEMP_DIR=$INSTR_HOME/target_classes/
 
 CLASSES_DIR=$1
 
-CLASSPATH=$ASPECTJ_HOME/lib/aspectjrt.jar:$ASPECTJ_HOME/lib/aspectjtools.jar
+CLASSPATH=$INSTR_HOME/lib/aspectjrt.jar:$INSTR_HOME/lib/aspectjtools.jar:$2
 
 echo "compiling aspects"
-#TODO: compile all java files in dir $CUSTOM_ASPECT_HOME
-find $CUSTOM_ASPECT_PATH -type f -name "*.java" -exec javac -classpath $CLASSPATH -g -d $CLASSES_DIR {} \;
+#TODO: compile all java files in src dir
+
+find $INSTR_HOME/src -type f -name "*.java" > sources.txt
+javac -classpath $CLASSPATH -g -d $CLASSES_DIR @sources.txt || error_exit "Error in compiling Aspects..Aborting "
+rm -f sources.txt
 
 echo "Weaving aspect..."
- 
+java -cp $CLASSPATH org.aspectj.tools.ajc.Main -Xmx2048M -source 1.5 -inpath $CLASSES_DIR/ -aspectpath $INSTR_HOME/src -d $TEMP_DIR || error_exit "Error while weaving aspects.. Aborting"
 
-#JAVA_OPTS="-Xmx2048M" ajc  -source 1.5 -inpath $CLASSES_DIR/ -aspectpath $CUSTOM_ASPECT_PATH -d $TEMP_DIR
-java -cp $CLASSPATH org.aspectj.tools.ajc.Main -Xmx2048M -source 1.5 -inpath $CLASSES_DIR/ -aspectpath $CUSTOM_ASPECT_PATH -d $TEMP_DIR 
 
-echo "Replacing the modified classes..."
+echo "Replacing with the modified classes..."
 cp -rf $TEMP_DIR/* $CLASSES_DIR/
+rm -rf $TEMP_DIR
+
 
 # copy classes in aspectjrt.jar 
-cp -r $ASPECTJ_HOME/extracted_classes/* $CLASSES_DIR/
-
+mkdir $INSTR_HOME/extracted_classes
+unzip $INSTR_HOME/lib/aspectjrt.jar -d $INSTR_HOME/extracted_classes > /dev/null
+cp -r $INSTR_HOME/extracted_classes/* $CLASSES_DIR/
+rm -rf $INSTR_HOME/extracted_classes

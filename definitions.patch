@@ -1,5 +1,13 @@
-1311a1312,1315
-> $(hide) if [[ $(PRIVATE_CLASS_INTERMEDIATES_DIR) == *"framework_intermediates"* ]]; then \
->        $(ASPECTJ_HOME)/post-compile-weaving.sh  $(PRIVATE_CLASS_INTERMEDIATES_DIR); \
->  fi
->  
+1308,1319d1307
+< 
+< 
+< $(hide) if [ -z $(ANDROID_HOME) ]; then \
+<     echo "ANDROID_HOME is not set"; \
+<     exit 1; \
+<     fi 
+< 
+< $(hide) if [[ $(PRIVATE_CLASS_INTERMEDIATES_DIR) == *"framework_intermediates"* ]]; then \
+<    $(ANDROID_HOME)/instrumentation_tool/post-compile-weaving.sh  $(PRIVATE_CLASS_INTERMEDIATES_DIR) $(strip \
+<         $(call normalize-path-list,$(PRIVATE_ALL_JAVA_LIBRARIES))); \
+< fi
+< 
