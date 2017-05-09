@@ -1,0 +1,78 @@
+
+Steps to instrument and build Android
+ 
+This section provides step by step instructions to download and build Android source with AspectJ instrumentation.
+
+1. Establish build environment and Download Android source 
+
+1.	Establish your environment
+Follow instructions on Android source page to establish a build environment: https://source.android.com/source/initializing.html  
+
+2.	Install Repo 
+i.  Create a bin/ directory in your home directory and make sure that it is included in your 	    path:
+     $ mkdir ~/bin
+        $ PATH=~/bin:$PATH
+
+           	ii. Download the Repo tool and ensure that it is executable. 
+
+$curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+        $ chmod a+x ~/bin/repo
+
+3.	Create an empty directory to hold your working files.
+
+                 $ mkdir Working_Directory
+       $ cd Working_Directory
+
+4.	Configure git with your name and email address.
+
+  	  $ git config --global user.name "Your Name"
+       $ git config --global user.email "you@example.com"
+
+5.	Initialize repo with the following command.  (for a different version, provide a branch name with -b option. For a list of branches, see Source Code Tags and Builds.
+
+	For example,
+$repo init –u https://android.googlesource.com/platform/manifest -b android-2.3.7_r1
+
+6.	Download Android source
+	To pull down the Android source tree to your working directory from the repositories   
+      as specified in the default manifest, run
+
+            $ repo sync
+
+      This step may take a couple of hours depending upon network speed.
+
+7.	Download folder “instrumentation_tool” from git repository into Working_Directory
+
+	$git clone https://github.com/poojakanchan/instrumentation_tool.git
+
+8.	Apply patch to the build files. Make sure you take a backup before making the changes. Provide execution permissions to the scripts in the instrumentation_tool folder.
+
+$cp  build/core/definitions.mk build/core/definitions_bak.mk
+$ patch build/core/definitions.mk < instrumentation_tool/definitions.patch
+$ chmod +x instrumentation_tool/*.sh
+
+2. Build Android source with custom aspects
+	
+1.	Write custom aspects and place them in the src/ folder. (Example Aspect class “TestAspect.java” is provided) The files under the src/ folder are automatically compiled and injected by the Instrumentation tool while running a build.
+
+2.	Initialize environment 
+
+  $ export ANDROID_HOME=<path to Working_Directory>
+  $ source build/envsetup.sh
+  $ lunch
+
+3.	Build Android source
+          $make showcommands
+
+      To redirect logs to a log file, run
+          $make showcommands 2>&1 | tee log_file
+
+      To use multiple threads, run it with -j option as
+          $ make -j4
+       Note that, building the source may require up to 2-3 hours.
+
+4.	After the build is successful, launch an emulator using the command:
+          $ emulator
+
+      To see adb logs, use command:
+          $ adb logcat
